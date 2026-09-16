@@ -189,6 +189,7 @@ export function ConferenceView({
   const [autoScroll, setAutoScroll] = useState(true);
   const [playbackSpeed, setPlaybackSpeed] = useState<'normal' | 'slow'>('normal');
   const [voicePersona, setVoicePersona] = useState<IndianVoicePersona>('ananya');
+  const showTranslations = false;
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedSegmentId, setCopiedSegmentId] = useState<string | null>(null);
 
@@ -858,15 +859,6 @@ export function ConferenceView({
               </button>
             )}
 
-            {allSegments.length > 0 && (
-              <button
-                onClick={handleClearProceedings}
-                className="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-xl text-xs transition-colors"
-                title="Clear live proceedings for next session"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            )}
           </div>
         </div>
 
@@ -1330,6 +1322,16 @@ export function ConferenceView({
               <span className="px-2 py-0.5 rounded-full text-xs font-extrabold bg-indigo-100 text-indigo-900 border border-indigo-200">
                 {allSegments.length} Interventions
               </span>
+              {allSegments.length > 0 && (
+                <button
+                  onClick={handleClearProceedings}
+                  className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors"
+                  title="Clear live proceedings for next session"
+                  aria-label="Clear live proceedings for next session"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
             </div>
             <p className="text-xs text-slate-500">
               Parallel transcript: Original speech alongside live translation in your chosen listening channel.
@@ -1463,7 +1465,7 @@ export function ConferenceView({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-3">
+                  <div className={`grid grid-cols-1 ${showTranslations ? 'md:grid-cols-2' : ''} gap-3 pt-3`}>
                     <div>
                       <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
                         Original Spoken Text:
@@ -1473,7 +1475,7 @@ export function ConferenceView({
                       </p>
                     </div>
 
-                    <div className="bg-indigo-50/40 p-2.5 rounded-lg border border-indigo-100">
+                    {showTranslations && <div className="bg-indigo-50/40 p-2.5 rounded-lg border border-indigo-100">
                       <div className="text-[10px] font-bold uppercase tracking-wider text-indigo-900 mb-1 flex items-center justify-between">
                         <span>Translated to {SUPPORTED_LANGUAGES[listeningLang]?.name}:</span>
                         <button
@@ -1498,7 +1500,7 @@ export function ConferenceView({
                           {trans.transliteration}
                         </div>
                       )}
-                    </div>
+                    </div>}
                   </div>
                 </div>
               );
@@ -1564,7 +1566,7 @@ export function ConferenceView({
                   </div>
                 </div>
 
-                <div className="space-y-2 pt-4 border-t border-white/10">
+                {showTranslations && <div className="space-y-2 pt-4 border-t border-white/10">
                   <div className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-amber-400 flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-amber-400" />
                     <span>
@@ -1579,7 +1581,7 @@ export function ConferenceView({
                       {currentTranslation.transliteration}
                     </div>
                   )}
-                </div>
+                </div>}
               </>
             ) : (
               <div className="text-center space-y-3 py-12">

@@ -98,7 +98,7 @@ export function AudienceView({ onSwitchToOperator }: AudienceViewProps) {
   );
 
   // Audio & Display settings
-  const [isAudioTunedIn, setIsAudioTunedIn] = useState(false);
+  const [isAudioTunedIn, setIsAudioTunedIn] = useState(true);
   const [liveConnectionStatus, setLiveConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('connecting');
   const [operatorStatus, setOperatorStatus] = useState<LiveOperatorStatus>({
     activity: 'offline',
@@ -107,7 +107,7 @@ export function AudienceView({ onSwitchToOperator }: AudienceViewProps) {
   const [volume, setVolume] = useState<number>(85);
   const [isMuted, setIsMuted] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<'normal' | 'slow'>('normal');
-  const [voicePersona, setVoicePersona] = useState<IndianVoicePersona>('ananya');
+  const [voicePersona, setVoicePersona] = useState<IndianVoicePersona>(() => indicSpeech.getConfig().persona);
   const [showSettings, setShowSettings] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -117,7 +117,12 @@ export function AudienceView({ onSwitchToOperator }: AudienceViewProps) {
   const [fontSize, setFontSize] = useState<'base' | 'lg' | 'xl' | '2xl'>('xl');
   const [isClarityBoost, setIsClarityBoost] = useState(true);
   const listeningLangRef = useRef(listeningLang);
-  const isAudioTunedInRef = useRef(false);
+  const isAudioTunedInRef = useRef(true);
+
+  useEffect(() => {
+    indicSpeech.setMuted(false);
+    conferenceSpeechManager.setMuted(false);
+  }, []);
 
   // Sync with live manager and local storage events
   useEffect(() => {
@@ -166,10 +171,6 @@ export function AudienceView({ onSwitchToOperator }: AudienceViewProps) {
       onStatus: setLiveConnectionStatus,
       onOperatorStatus: (status) => {
         setOperatorStatus(status);
-        if (status.voicePersona) {
-          setVoicePersona(status.voicePersona);
-          indicSpeech.setPersona(status.voicePersona);
-        }
       },
       onSegment: (segment) => {
         setAllSegments((previous) => {
