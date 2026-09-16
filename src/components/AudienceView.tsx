@@ -118,6 +118,7 @@ export function AudienceView({ onSwitchToOperator }: AudienceViewProps) {
   const [isClarityBoost, setIsClarityBoost] = useState(true);
   const listeningLangRef = useRef(listeningLang);
   const isAudioTunedInRef = useRef(true);
+  const voicePersonaRef = useRef(voicePersona);
 
   useEffect(() => {
     indicSpeech.setMuted(false);
@@ -181,6 +182,7 @@ export function AudienceView({ onSwitchToOperator }: AudienceViewProps) {
         if (isAudioTunedInRef.current) {
           const translation = segment.translations[listeningLangRef.current];
           indicSpeech.speak(translation?.translatedText || segment.speakerText, listeningLangRef.current, {
+            persona: voicePersonaRef.current,
             transliteration: translation?.transliteration,
             speed: playbackSpeed,
           });
@@ -236,8 +238,13 @@ export function AudienceView({ onSwitchToOperator }: AudienceViewProps) {
   };
 
   const handlePersonaChange = (persona: IndianVoicePersona) => {
+    voicePersonaRef.current = persona;
     setVoicePersona(persona);
     indicSpeech.setPersona(persona);
+    indicSpeech.stop();
+    if (isAudioTunedInRef.current && allSegments.length > 0) {
+      void handleReplaySegment(allSegments[allSegments.length - 1], persona);
+    }
   };
 
   const handleToggleClarityBoost = () => {
@@ -247,10 +254,11 @@ export function AudienceView({ onSwitchToOperator }: AudienceViewProps) {
   };
 
   // Play a specific segment on demand
-  const handleReplaySegment = async (seg: ConferenceSpeechSegment) => {
+  const handleReplaySegment = async (seg: ConferenceSpeechSegment, persona = voicePersonaRef.current) => {
     const trans = seg.translations[listeningLang];
-    indicSpeech.setPersona(voicePersona);
+    indicSpeech.setPersona(persona);
     const started = await indicSpeech.speak(trans?.translatedText || seg.speakerText, listeningLang, {
+      persona,
       transliteration: trans?.transliteration,
       speed: playbackSpeed,
     });

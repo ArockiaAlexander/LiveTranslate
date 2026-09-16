@@ -5,6 +5,7 @@ type SpeechCallback = () => void;
 type ErrorCallback = (err: any) => void;
 
 export interface SpeakOptions {
+  persona?: IndianVoicePersona;
   transliteration?: string;
   dialect?: string;
   speed?: 'normal' | 'slow';
@@ -218,6 +219,7 @@ class IndicSpeechService {
     this.stop();
     const requestId = this.speechRequestId;
 
+    const persona = options.persona || this.currentPersona;
     const speed = options.speed || this.currentSpeed;
     const isOnline = typeof navigator !== 'undefined' && navigator.onLine;
 
@@ -233,7 +235,7 @@ class IndicSpeechService {
           body: JSON.stringify({
             text: text.trim(),
             lang,
-            persona: this.currentPersona,
+            persona,
             dialect: options.dialect,
             speed,
           }),
@@ -244,7 +246,7 @@ class IndicSpeechService {
         if (requestId !== this.speechRequestId) return false;
 
         if (!res.ok) {
-          return this.fallbackToOfflineTTS(text, lang, options, requestId);
+          return this.fallbackToOfflineTTS(text, lang, { ...options, persona }, requestId);
         }
 
         const data = await res.json();
@@ -253,7 +255,7 @@ class IndicSpeechService {
         }
 
         if (data.fallbackToDevice || !data.audioBase64) {
-          return this.fallbackToOfflineTTS(text, lang, options, requestId);
+          return this.fallbackToOfflineTTS(text, lang, { ...options, persona }, requestId);
         }
 
         const audioUri = `data:${data.mimeType || 'audio/wav'};base64,${data.audioBase64}`;
@@ -280,12 +282,12 @@ class IndicSpeechService {
       } catch (err) {
         if (requestId !== this.speechRequestId) return false;
         console.warn('Neural Indian voice synthesis failed, falling back to device voice:', err);
-        return this.fallbackToOfflineTTS(text, lang, options, requestId);
+        return this.fallbackToOfflineTTS(text, lang, { ...options, persona }, requestId);
       }
     }
 
     // 2. Offline or device engine mode
-    return this.fallbackToOfflineTTS(text, lang, options);
+    return this.fallbackToOfflineTTS(text, lang, { ...options, persona });
   }
 
   private fallbackToOfflineTTS(
@@ -298,7 +300,7 @@ class IndicSpeechService {
 
     return offlineTTS.speak(text, lang, {
       transliteration: options.transliteration,
-      persona: this.currentPersona,
+      persona: options.persona || this.currentPersona,
       rate,
       pitch: options.pitch,
       volume: this.isMuted ? 0 : Math.min(1.0, options.volume ?? this.currentVolume),
